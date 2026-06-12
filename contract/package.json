@@ -1,0 +1,43 @@
+{
+  "name": "credport-contract",
+  "version": "0.1.0",
+  "description": "Compiled Compact contract bindings for credport, the reusable zero-knowledge identity credential on Midnight.",
+  "license": "Apache-2.0",
+  "author": "ogsamrat",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/index.js",
+    "dist/index.d.ts",
+    "dist/index.js.map",
+    "dist/witnesses.js",
+    "dist/witnesses.d.ts",
+    "dist/witnesses.js.map",
+    "dist/passport.compact",
+    "dist/managed/passport/contract/**",
+    "dist/managed/passport/zkir/**",
+    "dist/managed/passport/compiler/**"
+  ],
+  "keywords": ["midnight", "compact", "zero-knowledge", "credential", "credport"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ogsamrat/zkPassport.git",
+    "directory": "contract"
+  },
+  "homepage": "https://github.com/ogsamrat/zkPassport#readme",
+  "bugs": "https://github.com/ogsamrat/zkPassport/issues",
+  "scripts": {
+    "compact": "compact compile src/passport.compact src/managed/passport",
+    "build": "tsc --project tsconfig.build.json && node ../scripts/copy-managed.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}
