@@ -1,0 +1,54 @@
+{
+  "name": "zkpassport",
+  "version": "0.1.0",
+  "description": "Reusable ZK credential passport on Midnight — verify once, prove predicates anywhere",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.11.1"
+  },
+  "workspaces": {
+    "packages": [
+      "contract",
+      "passport-sdk",
+      "verifier-ui",
+      "issuer-cli",
+      "server",
+      "packages/react"
+    ]
+  },
+  "scripts": {
+    "compact": "npm run compact --workspace credport-contract",
+    "build": "npm run build --workspace credport-contract && npm run build --workspace credport && npm run build --workspace credport-app",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "dev": "npm run dev --workspace credport-app",
+    "deploy": "npm run deploy --workspace credport-cli"
+  },
+  "dependencies": {
+    "@midnight-ntwrk/compact-runtime": "0.16.0",
+    "@midnight-ntwrk/dapp-connector-api": "4.0.1",
+    "@midnight-ntwrk/midnight-js-contracts": "4.1.1",
+    "@midnight-ntwrk/midnight-js-fetch-zk-config-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-network-id": "4.1.1",
+    "@midnight-ntwrk/midnight-js-protocol": "4.1.1",
+    "@midnight-ntwrk/midnight-js-types": "4.1.1",
+    "@midnight-ntwrk/midnight-js-utils": "4.1.1",
+    "rxjs": "^7.8.2",
+    "semver": "^7.8.4"
+  },
+  "devDependencies": {
+    "@types/semver": "^7.7.1",
+    "esbuild": "^0.28.1",
+    "rollup": "^4.62.2",
+    "typescript": "^5.9.3"
+  },
+  "allowScripts": {
+    "@swc/core@1.15.43": true,
+    "msgpackr-extract@3.0.4": true,
+    "esbuild@0.28.1": true,
+    "sharp@0.34.5": true
+  }
+}
