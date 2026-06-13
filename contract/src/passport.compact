@@ -1,0 +1,320 @@
+// ZK Credential Passport — a reusable, composable privacy primitive on Midnight.
+//
+// A user verifies a real-world attribute ONCE with a trusted issuer, holds the
+// credential in private state, and can later prove predicates about it to ANY
+// dApp. The chain only ever sees:
+//   - an opaque credential commitment (at issuance)
+//   - an opaque enrollment nullifier (issuer-time sybil dedup)
+//   - opaque, scope-separated nullifiers at proof time
+//   - a "verified" record keyed by an opaque session id
+// The underlying attributes (birthdate, country, accreditation) NEVER leave
+// the user's machine.
+//
+// SECURITY NOTE (soundness): every private attribute is read from its witness
+// EXACTLY ONCE per transaction and threaded through `CredentialData`. Reading a
+// witness twice would create two independent, prover-controlled inputs with no
+// equality constraint — a malicious holder could satisfy the membership proof
+// with their real birthdate and the predicate with a forged one. Do not
+// reintroduce duplicate witness reads.
+pragma language_version 0.23;
+
+import CompactStandardLibrary;
+
+// ===========================================================================
+// Public ledger state
+// ===========================================================================
+
+// Admin (deployer-chosen) may register additional trusted issuers.
+export sealed ledger admin: Bytes<32>;
+
+// Trusted-issuer registry: public keys allowed to attest credentials.
+export ledger issuers: Set<Bytes<32>>;
+
+// Commitments of validly issued credentials. A Merkle tree (rather than a
+// plain set) lets holders prove membership WITHOUT revealing which
+// credential is theirs — proofs are unlinkable to issuance.
+export ledger credentials: HistoricMerkleTree<16, Bytes<32>>;
+
+// Issuer-time sybil dedup: one enrollment nullifier per issued credential.
+// Real cross-enrollment personhood depends on the ISSUER deriving this from a
+// KYC-unique identifier and de-duplicating humans off-chain (see README).
+export ledger enrollmentNullifiers: Set<Bytes<32>>;
+
+// Revocation: issuers insert a credential's revocation nullifier here.
+// The nullifier is derived from the credential's PRIVATE salt, so it is not
+// computable from public data — proofs stay unlinkable to issuance.
+export ledger revocationNullifiers: Set<Bytes<32>>;
+
+export ledger issuedCount: Counter;
+
+// The composable output other dApps consume: sessionId -> verification.
+export struct AgeVerification {
+  threshold: Uint<8>,
+  asOfDate: Uint<32>,
+}
+export ledger ageVerifications: Map<Bytes<32>, AgeVerification>;
+
+// sessionId -> scoped unique-human nullifier. The nullifier is scoped to a
+// per-dApp value, so the same human presents UNLINKABLE nullifiers to
+// different dApps, and none of them links back to the issuance nullifier.
+export ledger uniqueHumanVerifications: Map<Bytes<32>, Bytes<32>>;
+
+// Identity (name + age) verifications. A record here means the holder proved,
+// in one shot, that their credentialed name matches the claimed name AND their
+// age is at least `threshold` as of `asOfDate`. The name itself never appears.
+export struct IdentityVerification {
+  threshold: Uint<8>,
+  asOfDate: Uint<32>,
+}
+export ledger identityVerifications: Map<Bytes<32>, IdentityVerification>;
+
+// Attributes threaded out of the membership proof, so predicates evaluate the
+// SAME wires that were bound into the on-chain commitment.
+struct CredentialData {
+  sk: Bytes<32>,
+  birthDate: Uint<32>,
+  country: Uint<16>,
+  accredited: Boolean,
+  nameHash: Bytes<32>,
+  commitment: Bytes<32>,
+}
+
+// ===========================================================================
+// Constructor
+// ===========================================================================
+
+constructor(initialIssuer: Bytes<32>) {
+  admin = disclose(initialIssuer);
+  issuers.insert(disclose(initialIssuer));
+}
+
+// ===========================================================================
+// Private state (witnesses) — never on-chain
+// ===========================================================================
+
+// Issuer's signing secret (issuer-side private state).
+witness issuerSecretKey(): Bytes<32>;
+
+// Holder's secrets: unique-humanity secret key + verified attributes +
+// the credential opening (salt) binding them to the on-chain commitment.
+witness userSecretKey(): Bytes<32>;
+witness credentialBirthDate(): Uint<32>;   // YYYYMMDD
+witness credentialCountry(): Uint<16>;     // ISO 3166-1 numeric
+witness credentialAccredited(): Boolean;
+witness credentialNameHash(): Bytes<32>;   // hash of the holder's legal name
+witness credentialSalt(): Bytes<32>;
+
+// Merkle authentication path for the holder's commitment, computed locally
+// from public tree data by the SDK.
+witness credentialAuthPath(commitment: Bytes<32>): MerkleTreePath<16, Bytes<32>>;
+
+// ===========================================================================
+// Pure helpers (deterministic hashing / commitment scheme)
+// ===========================================================================
+
+export pure circuit publicKey(sk: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([pad(32, "zkpassport:pk:v1"), sk]);
+}
+
+// Issuer-time dedup tag. Disclosed once at issuance only.
+export pure circuit enrollmentNullifier(sk: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([pad(32, "zkpassport:enroll:v1"), sk]);
+}
+
+// Proof-time unique-human nullifier, scoped to a per-dApp value. Different
+// scope => unlinkable nullifier; a distinct hash domain from enrollment means
+// it never links to the issuance record.
+export pure circuit scopedNullifier(sk: Bytes<32>, scope: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>([pad(32, "zkpassport:uniq:v1"), sk, scope]);
+}
+
+// Revocation nullifier derived from the PRIVATE salt (and commitment), so only
+// the issuing issuer (who generated the salt) can compute it — no public
+// precomputation, and no cross-issuer mass revocation.
+export pure circuit revocationNullifier(commitment: Bytes<32>, salt: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>([pad(32, "zkpassport:rev:v1"), commitment, salt]);
+}
+
+export pure circuit attributesHash(
+  birthDate: Uint<32>,
+  country: Uint<16>,
+  accredited: Boolean,
+  nameHash: Bytes<32>
+): Bytes<32> {
+  return persistentHash<Vector<5, Bytes<32>>>([
+    pad(32, "zkpassport:attrs:v2"),
+    (birthDate as Field) as Bytes<32>,
+    (country as Field) as Bytes<32>,
+    (((accredited as Uint<0..1>) as Field)) as Bytes<32>,
+    nameHash
+  ]);
+}
+
+export pure circuit credentialCommitment(
+  subject: Bytes<32>,
+  attrsHash: Bytes<32>,
+  salt: Bytes<32>
+): Bytes<32> {
+  return persistentHash<Vector<4, Bytes<32>>>([
+    pad(32, "zkpassport:cred:v1"),
+    subject,
+    attrsHash,
+    salt
+  ]);
+}
+
+// ===========================================================================
+// Internal: read every private attribute ONCE, recompute the holder's
+// commitment, prove it is a validly issued and unrevoked credential (without
+// revealing which), and return the bound attributes for predicates to reuse.
+// ===========================================================================
+
+circuit proveValidCredential(): CredentialData {
+  const sk = userSecretKey();
+  const birthDate = credentialBirthDate();
+  const country = credentialCountry();
+  const accredited = credentialAccredited();
+  const nameHash = credentialNameHash();
+  const salt = credentialSalt();
+
+  const subject = publicKey(sk);
+  const attrs = attributesHash(birthDate, country, accredited, nameHash);
+  const commitment = credentialCommitment(subject, attrs, salt);
+
+  // Membership: witness-provided Merkle path, verified in-circuit.
+  const path = credentialAuthPath(commitment);
+  assert(path.leaf == commitment, "auth path does not match credential");
+  assert(
+    credentials.checkRoot(disclose(merkleTreePathRoot<16, Bytes<32>>(path))),
+    "credential not found in registry"
+  );
+
+  // Not revoked: the (salt-derived) revocation nullifier must be absent.
+  const revNul = revocationNullifier(commitment, salt);
+  assert(!revocationNullifiers.member(disclose(revNul)), "credential has been revoked");
+
+  return CredentialData {
+    sk: sk,
+    birthDate: birthDate,
+    country: country,
+    accredited: accredited,
+    nameHash: nameHash,
+    commitment: commitment
+  };
+}
+
+// ===========================================================================
+// Issuer circuits
+// ===========================================================================
+
+// Issuer-only. The issuer verified the subject's real-world attributes
+// off-chain, computed the credential commitment together with the subject,
+// and writes ONLY the commitment (plus the enrollment dedup nullifier).
+export circuit issueCredential(commitment: Bytes<32>, enrollNullifier: Bytes<32>): [] {
+  const issuerPk = publicKey(issuerSecretKey());
+  assert(issuers.member(disclose(issuerPk)), "caller is not a registered issuer");
+
+  const dNullifier = disclose(enrollNullifier);
+  assert(!enrollmentNullifiers.member(dNullifier), "credential already issued for this enrollment");
+
+  credentials.insert(disclose(commitment));
+  enrollmentNullifiers.insert(dNullifier);
+  issuedCount.increment(1);
+}
+
+// Issuer-only. Revokes a credential by publishing its revocation nullifier
+// (computed off-chain from the commitment + salt the issuer already knows).
+export circuit revoke(revNullifier: Bytes<32>): [] {
+  const issuerPk = publicKey(issuerSecretKey());
+  assert(issuers.member(disclose(issuerPk)), "caller is not a registered issuer");
+  revocationNullifiers.insert(disclose(revNullifier));
+}
+
+// Admin-only. Registers an additional trusted issuer.
+export circuit addIssuer(newIssuer: Bytes<32>): [] {
+  const callerPk = publicKey(issuerSecretKey());
+  assert(disclose(callerPk == admin), "caller is not the admin");
+  issuers.insert(disclose(newIssuer));
+}
+
+// ===========================================================================
+// Holder circuits — the reusable predicates
+// ===========================================================================
+
+// Prove age >= threshold as of `asOfDate` (both public), disclosing NOTHING
+// about the birthdate beyond that single boolean fact. On success, records
+// a verification against the caller-supplied opaque sessionId, which any
+// dApp can read as a `verified ✓`.
+//
+// Dates use YYYYMMDD encoding, which makes the age predicate exact:
+//   age >= threshold  <=>  asOfDate >= birthDate + threshold * 10000
+export circuit proveAgeOver(sessionId: Bytes<32>, threshold: Uint<8>, asOfDate: Uint<32>): [] {
+  const dSession = disclose(sessionId);
+  assert(!ageVerifications.member(dSession), "session already used");
+
+  // Single source of truth for the birthdate: the value bound into the
+  // Merkle-proven commitment. No second witness read.
+  const cred = proveValidCredential();
+
+  const minBirthCutoff = (cred.birthDate + ((threshold as Uint<32>) * 10000)) as Uint<64>;
+  assert(disclose((asOfDate as Uint<64>) >= minBirthCutoff), "age is below threshold");
+
+  ageVerifications.insert(
+    dSession,
+    AgeVerification { threshold: disclose(threshold), asOfDate: disclose(asOfDate) }
+  );
+}
+
+// Prove IDENTITY: name AND age together, in one proof. Confirms that the
+// holder's credentialed name matches `claimedNameHash` (the hash of the name
+// the verifier is checking) AND that age >= threshold as of asOfDate. Discloses
+// only the two boolean facts; the name and birthdate stay private.
+export circuit proveIdentity(
+  sessionId: Bytes<32>,
+  threshold: Uint<8>,
+  asOfDate: Uint<32>,
+  claimedNameHash: Bytes<32>
+): [] {
+  const dSession = disclose(sessionId);
+  assert(!identityVerifications.member(dSession), "session already used");
+
+  const cred = proveValidCredential();
+
+  const minBirthCutoff = (cred.birthDate + ((threshold as Uint<32>) * 10000)) as Uint<64>;
+  assert(disclose((asOfDate as Uint<64>) >= minBirthCutoff), "age is below threshold");
+
+  assert(disclose(cred.nameHash == claimedNameHash), "name does not match credential");
+
+  identityVerifications.insert(
+    dSession,
+    IdentityVerification { threshold: disclose(threshold), asOfDate: disclose(asOfDate) }
+  );
+}
+
+// Prove unique humanity within a dApp scope: reveals only a per-scope
+// nullifier (same human + same scope => same nullifier; different scopes and
+// the issuance record stay unlinkable). `scope` is chosen by the consuming
+// dApp (e.g. its contract address).
+export circuit proveUniqueHuman(sessionId: Bytes<32>, scope: Bytes<32>): [] {
+  const dSession = disclose(sessionId);
+  assert(!uniqueHumanVerifications.member(dSession), "session already used");
+
+  // Credential membership already proves this sk belongs to an issued,
+  // unrevoked credential, so no separate (linkable) enrollment check is needed.
+  const cred = proveValidCredential();
+
+  const nullifier = scopedNullifier(cred.sk, disclose(scope));
+  uniqueHumanVerifications.insert(dSession, disclose(nullifier));
+}
+
+// --- Architected but stubbed for the MVP (data model already binds these
+// --- attributes into the credential commitment, so enabling them is purely
+// --- additive): residency and accredited-investor predicates.
+
+export circuit proveResidency(sessionId: Bytes<32>, countryCode: Uint<16>): [] {
+  assert(false, "proveResidency is not implemented in this MVP");
+}
+
+export circuit proveAccredited(sessionId: Bytes<32>): [] {
+  assert(false, "proveAccredited is not implemented in this MVP");
+}
