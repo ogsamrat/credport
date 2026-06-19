@@ -1,0 +1,53 @@
+{
+  "name": "credport-react",
+  "version": "0.1.0",
+  "description": "Drop-in React components to gate any dApp on a Midnight identity credential. Prove name and age with a single verified result, never the underlying data.",
+  "license": "Apache-2.0",
+  "author": "ogsamrat",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "keywords": [
+    "midnight",
+    "zero-knowledge",
+    "zk",
+    "credential",
+    "identity",
+    "age-verification",
+    "privacy",
+    "react",
+    "web3",
+    "credport"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ogsamrat/zkPassport.git",
+    "directory": "packages/react"
+  },
+  "homepage": "https://github.com/ogsamrat/zkPassport#readme",
+  "bugs": "https://github.com/ogsamrat/zkPassport/issues",
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "dependencies": {
+    "credport": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3"
+  }
+}
