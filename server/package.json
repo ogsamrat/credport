@@ -1,0 +1,25 @@
+{
+  "name": "credport-server",
+  "version": "0.1.0",
+  "description": "zkPassport backend — Groq document KYC extraction + credential verification gateway",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.1",
+    "@midnight-ntwrk/midnight-js-network-id": "4.1.1",
+    "credport": "0.1.0",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.0",
+    "sharp": "^0.34.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.19.2"
+  }
+}
