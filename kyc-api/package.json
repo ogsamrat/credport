@@ -1,0 +1,7 @@
+{
+  "name": "credport-kyc-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Serverless document KYC endpoint for the credport demo (Groq vision).",
+  "license": "Apache-2.0"
+}
