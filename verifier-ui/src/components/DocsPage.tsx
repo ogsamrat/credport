@@ -1,8 +1,8 @@
 import { CodeWindow } from './Code.js';
+import { contractUrl } from '../lib/format.js';
 
 const CONTRACT = '1904b5a37fdcc8eeb62a479e9924de30b51d0e227bc43b045b21806254f994ba';
 const REPO = 'https://github.com/ogsamrat/credport';
-const EXPLORER = 'https://preprod.midnightexplorer.com/';
 const NPM = 'https://www.npmjs.com/package/credport';
 
 const TOC: [string, string][] = [
@@ -267,10 +267,10 @@ function Gate() {
               <div><span className="dp-kv__k">proof server</span><span className="dp-kv__v">midnightntwrk/proof-server:8.0.3</span></div>
               <div className="dp-kv__full">
                 <span className="dp-kv__k">contract</span>
-                <a className="dp-kv__addr" href={EXPLORER} target="_blank" rel="noreferrer">{CONTRACT}</a>
+                <a className="dp-kv__addr" href={contractUrl(CONTRACT)} target="_blank" rel="noreferrer">{CONTRACT}</a>
               </div>
             </div>
-            <a className="btn btn--secondary btn--sm dp-btn" href={EXPLORER} target="_blank" rel="noreferrer">
+            <a className="btn btn--secondary btn--sm dp-btn" href={contractUrl(CONTRACT)} target="_blank" rel="noreferrer">
               Open the preprod explorer
             </a>
           </section>

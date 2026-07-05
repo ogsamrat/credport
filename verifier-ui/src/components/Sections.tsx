@@ -1,4 +1,4 @@
-import { EXPLORER } from '../lib/format.js';
+import { contractUrl } from '../lib/format.js';
 import { CodeWindow } from './Code.js';
 
 const CONTRACT = '1904b5a37fdcc8eeb62a479e9924de30b51d0e227bc43b045b21806254f994ba';
@@ -78,16 +78,16 @@ export function Why() {
           <CodeWindow
             file="verifier.ts"
             lang="ts"
-            code={`// what a verifier needs
+            code={`// a verifier needs only an indexer connection
 import { Verifier } from 'credport';
 
 const v = Verifier.connect(CONTRACT);
 const session = v.newSessionId();
-// hand the session to the user's wallet
+// hand the session to the user to prove against
 
 const { verified } =
   await v.verifyIdentity(session, 18);
-// true. No wallet. No data. One bit.`}
+// name matched and age >= 18. One bit, no data.`}
           />
         </div>
       </div>
@@ -120,7 +120,7 @@ export function Install() {
               lang="ts"
               code={`const v = Verifier.connect(CONTRACT);
 const session = v.newSessionId();
-// the user proves on their device
+// the user proves name + age on their device
 const { verified } =
   await v.verifyIdentity(session, 18);`}
             />
@@ -160,7 +160,7 @@ export function Docs() {
           <h2>It is running on preprod right now.</h2>
         </div>
         <div className="docs" data-reveal-group>
-          <a className="doc" data-reveal href={EXPLORER} target="_blank" rel="noreferrer">
+          <a className="doc" data-reveal href={contractUrl(CONTRACT)} target="_blank" rel="noreferrer">
             <div className="doc__k">deployed contract</div>
             <div className="doc__addr">{CONTRACT}</div>
             <div className="doc__cta">Open the preprod explorer</div>

@@ -21,7 +21,7 @@ sees the name, the birthdate, or the document.
 ---
 
 > **Live on Midnight preprod.** Contract
-> [`1904b5a37fdcc8eeb62a479e9924de30b51d0e227bc43b045b21806254f994ba`](https://preprod.midnightexplorer.com/)
+> [`1904b5a37fdcc8eeb62a479e9924de30b51d0e227bc43b045b21806254f994ba`](https://preprod.midnightexplorer.com/contracts/0x1904b5a37fdcc8eeb62a479e9924de30b51d0e227bc43b045b21806254f994ba)
 > is the single canonical deployment. The demo verifies against this one contract, and every app that
 > consumes credport points at the same address.
 
@@ -209,9 +209,9 @@ It is both the marketing page and the real dApp: the "try it" section is the liv
    processed for that one request and never stored.
 5. Issue the credential. Only a commitment is written on-chain.
 6. Prove your name and age. The dApp reads back a single `verified` result, and you can confirm on the
-   [preprod explorer](https://preprod.midnightexplorer.com/) that the transaction against contract
-   `1904b5a37fdcc8eeb62a479e9924de30b51d0e227bc43b045b21806254f994ba` carries a commitment and a
-   verified record with no birthdate anywhere.
+   preprod explorer that the transaction against contract
+   [`1904b5a37fdcc8eeb62a479e9924de30b51d0e227bc43b045b21806254f994ba`](https://preprod.midnightexplorer.com/contracts/0x1904b5a37fdcc8eeb62a479e9924de30b51d0e227bc43b045b21806254f994ba)
+   carries a commitment and a verified record with no birthdate anywhere.
 
 ## Why it has to be on Midnight
 

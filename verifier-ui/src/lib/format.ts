@@ -3,6 +3,10 @@ export const short = (s: string, n = 10): string =>
 
 export const EXPLORER = 'https://preprod.midnightexplorer.com/';
 
+/** Deep link to a contract on the preprod explorer (addresses are 0x-prefixed there). */
+export const contractUrl = (address: string): string =>
+  `https://preprod.midnightexplorer.com/contracts/0x${address}`;
+
 /** YYYYMMDD int (as stored on-chain) → human date. */
 export const fromYyyymmdd = (n: number | undefined): string => {
   if (!n) return 'n/a';
