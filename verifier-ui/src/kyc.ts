@@ -41,43 +41,75 @@ export const fileToDataUri = (file: File): Promise<string> =>
  * while staying readable for the vision model. Falls back to the raw data URI
  * if the canvas path is unavailable.
  */
-export async function fileToImageDataUri(file: File, maxDim = 1600, quality = 0.82): Promise<string> {
+// Base64 payload ceiling. The serverless request body limit is ~4.5MB; stay well
+// under it (base64 inflates bytes by ~37%, and there is JSON overhead too).
+const MAX_DATAURI_CHARS = 2_800_000;
+
+export async function fileToImageDataUri(file: File, maxDim = 1600): Promise<string> {
   const raw = await fileToDataUri(file);
+
+  let img: HTMLImageElement;
   try {
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    img = await new Promise<HTMLImageElement>((resolve, reject) => {
       const el = new Image();
       el.onload = () => resolve(el);
-      el.onerror = () => reject(new Error('image decode failed'));
+      el.onerror = () => reject(new Error('decode'));
       el.src = raw;
     });
-    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  } catch {
+    // Most commonly an iPhone HEIC photo, which browsers cannot decode.
+    throw new Error('Could not read this image. Please upload a clear JPG or PNG (HEIC is not supported).');
+  }
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return raw;
+
+  // Encode as JPEG, shrinking dimensions and quality until comfortably under
+  // the request limit, so a full-size phone photo still sends reliably.
+  let scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  let quality = 0.82;
+  let out = raw;
+  for (let attempt = 0; attempt < 6; attempt += 1) {
     const w = Math.max(1, Math.round(img.width * scale));
     const h = Math.max(1, Math.round(img.height * scale));
-    const canvas = document.createElement('canvas');
     canvas.width = w;
     canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return raw;
+    ctx.clearRect(0, 0, w, h);
     ctx.drawImage(img, 0, 0, w, h);
-    return canvas.toDataURL('image/jpeg', quality);
-  } catch {
-    return raw;
+    out = canvas.toDataURL('image/jpeg', quality);
+    if (out.length <= MAX_DATAURI_CHARS) return out;
+    scale *= 0.8;
+    quality = Math.max(0.5, quality - 0.08);
   }
+  return out;
 }
 
 export async function extractIdentity(image: string, name: string): Promise<KycResult> {
+  const payload = JSON.stringify({ image, name });
+  if (payload.length > 4_000_000) {
+    throw new Error('The image is too large to send. Please use a smaller photo (a JPG or PNG).');
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 60_000);
   let res: Response;
   try {
     res = await fetch(KYC_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image, name }),
+      body: payload,
+      signal: controller.signal,
     });
   } catch {
-    throw new Error(
-      'Could not reach the KYC service. Check your connection, or try a smaller or clearer image.',
-    );
+    if (controller.signal.aborted) {
+      throw new Error('The KYC service took too long to respond. Please try again with a clearer image.');
+    }
+    throw new Error('Could not reach the KYC service. Check your connection and try again.');
+  } finally {
+    clearTimeout(timer);
   }
+
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { error?: string };
     throw new Error(body.error ?? `KYC service error ${res.status}.`);

@@ -179,16 +179,29 @@ export function usePassport() {
     [run, append, session, contractAddress],
   );
 
-  const pickDoc = useCallback(async (file: File | undefined) => {
-    setKyc(null);
-    if (!file) {
-      setDocDataUri(null);
-      setDocName(null);
-      return;
-    }
-    setDocName(file.name);
-    setDocDataUri(await fileToImageDataUri(file));
-  }, []);
+  const pickDoc = useCallback(
+    async (file: File | undefined) => {
+      setKyc(null);
+      setError(null);
+      if (!file) {
+        setDocDataUri(null);
+        setDocName(null);
+        return;
+      }
+      setDocName(file.name);
+      try {
+        const uri = await fileToImageDataUri(file);
+        setDocDataUri(uri);
+        append('plain', `Image ready, ${Math.round(uri.length / 1024)} KB to send`);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'Could not read the image.';
+        setDocDataUri(null);
+        append('err', msg);
+        setError(msg);
+      }
+    },
+    [append],
+  );
 
   const verifyDocument = useCallback(
     () =>
