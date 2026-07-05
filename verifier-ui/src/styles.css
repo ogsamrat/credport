@@ -45,12 +45,14 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+/* overflow-x: clip (not hidden) prevents horizontal scroll without turning the
+   root into a scroll container, which would otherwise break position: sticky. */
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; overflow-x: clip; }
 body {
   margin: 0; background: var(--paper); color: var(--ink);
   font-family: var(--sans); font-size: 17px; line-height: 1.6;
   font-feature-settings: 'liga', 'calt'; -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility; overflow-x: hidden;
+  text-rendering: optimizeLegibility; overflow-x: clip;
 }
 /* Grid and flex children must be allowed to shrink so overflowing code
    blocks scroll inside their card instead of widening the layout. */
@@ -399,7 +401,7 @@ input:focus, select:focus { outline: none; border-color: var(--ink-2); box-shado
   padding-block: clamp(40px, 6vw, 72px); align-items: start; }
 @media (max-width: 860px) { .dp-shell { grid-template-columns: 1fr; } }
 
-.dp-toc { position: sticky; top: 90px; }
+.dp-toc { position: sticky; top: 90px; align-self: start; max-height: calc(100dvh - 110px); overflow-y: auto; }
 @media (max-width: 860px) { .dp-toc { display: none; } }
 .dp-toc__t { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--ink-3); margin-bottom: var(--s-4); }
