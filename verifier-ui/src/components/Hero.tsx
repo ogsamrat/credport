@@ -4,7 +4,7 @@ export function Hero() {
   return (
     <section className="hero" id="top">
       <div className="wrap hero__grid">
-        <div>
+        <div className="hero__copy">
           <h1 className="display hero__title">
             Prove you're old enough.<br />
             Show <span className="em">nothing</span> else.

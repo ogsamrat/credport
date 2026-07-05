@@ -6,14 +6,15 @@ export function Nav({ ctl }: { ctl: PassportController }) {
   return (
     <header className="nav">
       <div className="nav__in wrap">
-        <a className="brand" href="#top" aria-label="zkPassport home">
-          <span className="brand__word">zkPassport</span>
+        <a className="brand" href="#top" aria-label="credport home">
+          <span className="brand__word">credport</span>
         </a>
         <nav className="nav__links" aria-label="Primary">
           <a href="#try">Try it</a>
           <a href="#how">How it works</a>
           <a href="#why">Why Midnight</a>
           <a href="#install">Install</a>
+          <a href="/docs">Docs</a>
         </nav>
         <div>
           {connected && session ? (
