@@ -1,6 +1,6 @@
 {
   "name": "credport",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Reusable zero-knowledge identity credentials on Midnight. Verify name and age once, then prove them to any app, which learns only a verified result and never the underlying data.",
   "license": "Apache-2.0",
   "author": "ogsamrat",

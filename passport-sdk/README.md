@@ -102,8 +102,10 @@ issuance.
 
 ## Try it live
 
-A full working demo runs on Midnight preprod. Connect a wallet, verify a document, issue a
-credential, and prove your name and age with a single verified result. See the
-[repository](https://github.com/ogsamrat/credport) for the live URL and the end-to-end guide.
+A full working demo runs on Midnight preprod at [credport.vercel.app](https://credport.vercel.app).
+Connect a wallet, verify a document, issue a credential, and prove your name and age with a single
+verified result. It runs against the single canonical deployment, contract
+[`1904b5a37fdcc8eeb62a479e9924de30b51d0e227bc43b045b21806254f994ba`](https://preprod.midnightexplorer.com/contracts/0x1904b5a37fdcc8eeb62a479e9924de30b51d0e227bc43b045b21806254f994ba).
+See the [repository](https://github.com/ogsamrat/credport) for the end-to-end guide.
 
 Apache-2.0.
