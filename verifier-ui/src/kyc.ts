@@ -19,11 +19,14 @@ export interface KycResult {
   reason?: string;
 }
 
-// The production build injects VITE_KYC_URL=/api/kyc (same origin). Local dev
-// with no env falls back to the deployed function, which sends permissive CORS
-// headers, so `npm run dev` works without running a separate backend.
+// In a production build the KYC function is same-origin at /api/kyc, so that is
+// the default (no build-time env needed, which also avoids Git Bash mangling a
+// "/api/kyc" value into a Windows path). In dev it points at the deployed
+// function, which sends permissive CORS headers, so `npm run dev` works without
+// a local backend. VITE_KYC_URL overrides both when set.
 const KYC_URL =
-  (import.meta.env.VITE_KYC_URL as string | undefined) ?? 'https://credport.vercel.app/api/kyc';
+  (import.meta.env.VITE_KYC_URL as string | undefined) ??
+  (import.meta.env.DEV ? 'https://credport.vercel.app/api/kyc' : '/api/kyc');
 
 /** Reads a File into a data URI. */
 export const fileToDataUri = (file: File): Promise<string> =>
