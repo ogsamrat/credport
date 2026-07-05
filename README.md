@@ -20,6 +20,11 @@ sees the name, the birthdate, or the document.
 
 ---
 
+> **Live on Midnight preprod.** Contract
+> [`1904b5a37fdcc8eeb62a479e9924de30b51d0e227bc43b045b21806254f994ba`](https://preprod.midnightexplorer.com/)
+> is the single canonical deployment. The demo verifies against this one contract, and every app that
+> consumes credport points at the same address.
+
 ## The idea in one line
 
 Identity checks today are done again at every door, and every door keeps a copy of your data.
@@ -197,14 +202,16 @@ It is both the marketing page and the real dApp: the "try it" section is the liv
 1. Open [credport.vercel.app](https://credport.vercel.app).
 2. Connect a Midnight wallet on **preprod** (Lace or 1AM). The 1AM wallet credits test DUST
    immediately, which is the smoother path.
-3. Deploy the contract, or reuse the address the page prefills.
+3. The page joins the single preprod deployment automatically. There is no deploy step; every session
+   verifies against the same contract.
 4. Upload a government ID and type your name. The document runs through Groq vision server-side to
    read name, date of birth, and country, and to check the name against the document. The image is
    processed for that one request and never stored.
 5. Issue the credential. Only a commitment is written on-chain.
-6. Prove your name and age. The dApp reads back a single `verified` result, and you can confirm on
-   the [preprod explorer](https://preprod.midnightexplorer.com/) that the transaction carries a
-   commitment and a verified record with no birthdate anywhere.
+6. Prove your name and age. The dApp reads back a single `verified` result, and you can confirm on the
+   [preprod explorer](https://preprod.midnightexplorer.com/) that the transaction against contract
+   `1904b5a37fdcc8eeb62a479e9924de30b51d0e227bc43b045b21806254f994ba` carries a commitment and a
+   verified record with no birthdate anywhere.
 
 ## Why it has to be on Midnight
 
