@@ -202,8 +202,8 @@ It is both the marketing page and the real dApp: the "try it" section is the liv
 1. Open [credport.vercel.app](https://credport.vercel.app).
 2. Connect a Midnight wallet on **preprod** (Lace or 1AM). The 1AM wallet credits test DUST
    immediately, which is the smoother path.
-3. The page joins the single preprod deployment automatically. There is no deploy step; every session
-   verifies against the same contract.
+3. The page joins the shared preprod deployment automatically for verification. To issue a credential
+   yourself, click "Deploy your own contract" so your wallet becomes that contract's issuer.
 4. Upload a government ID and type your name. The document runs through Groq vision server-side to
    read name, date of birth, and country, and to check the name against the document. The image is
    processed for that one request and never stored.

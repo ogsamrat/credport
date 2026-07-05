@@ -165,8 +165,9 @@ export function usePassport() {
     [run, append, contractAddress],
   );
 
-  // The demo joins the single canonical deployment. There is no per-session
-  // deploy: verification always happens against the same on-chain contract.
+  // Join the shared canonical deployment (the verification target). Joining does
+  // not grant the issuer key, so a joined wallet can prove and verify but not
+  // issue. To run the full flow, deploy your own contract below.
   const join = useCallback(
     () =>
       run('join', async () => {
@@ -177,6 +178,21 @@ export function usePassport() {
         append('ok', 'Joined the credport deployment');
       }),
     [run, append, session, contractAddress],
+  );
+
+  // Deploy a fresh contract. The connecting wallet becomes its issuer, which is
+  // what lets this demo run issue -> prove -> verify end to end in one session.
+  const deploy = useCallback(
+    () =>
+      run('deploy', async () => {
+        if (!session) return;
+        append('info', 'Deploying your own credport contract to preprod (sign in your wallet)…');
+        const deployed = await withFeeTimeout(PassportAPI.deploy(session.providers), 150_000, 'Deploy');
+        setApi(deployed);
+        setContractAddress(deployed.contractAddress);
+        append('ok', `Deployed at ${deployed.contractAddress}. This wallet is now the issuer.`);
+      }),
+    [run, append, session],
   );
 
   const pickDoc = useCallback(
@@ -284,6 +300,7 @@ export function usePassport() {
     api,
     contractAddress,
     join,
+    deploy,
     isIssuer,
     // kyc
     holderName,

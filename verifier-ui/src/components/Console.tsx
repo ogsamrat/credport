@@ -35,18 +35,25 @@ function ContractPanel({ ctl }: { ctl: PassportController }) {
         {ctl.api && <span className="panel__done tag ok">joined</span>}
       </div>
       <p className="panel__desc">
-        One deployment is a shared primitive. Every session verifies against this same contract on preprod.
+        One deployment is a shared primitive that any app verifies against. To issue a credential in
+        this demo, deploy your own contract and this wallet becomes its issuer.
       </p>
       <div className="result">
         <div className="kv"><span className="k">address </span>{address}</div>
       </div>
-      {ctl.api ? (
+      {ctl.api && (
         <a className="btn btn--secondary btn--sm" style={{ marginTop: 12 }} href={contractUrl(address)} target="_blank" rel="noreferrer">
           View on the explorer
         </a>
-      ) : (
-        <button className="btn btn--primary btn--block" style={{ marginTop: 12 }} onClick={() => ctl.join()} disabled={busy !== null}>
-          {busy === 'join' ? <span className="spinner" /> : null}Join the preprod deployment
+      )}
+      {!ctl.api && (
+        <button className="btn btn--secondary btn--block" style={{ marginTop: 12 }} onClick={() => ctl.join()} disabled={busy !== null}>
+          {busy === 'join' ? <span className="spinner" /> : null}Join the shared deployment
+        </button>
+      )}
+      {!ctl.isIssuer && (
+        <button className="btn btn--primary btn--block" style={{ marginTop: 12 }} onClick={ctl.deploy} disabled={busy !== null}>
+          {busy === 'deploy' ? <span className="spinner" /> : null}Deploy your own contract
         </button>
       )}
     </div>
@@ -121,7 +128,8 @@ function CredentialPanel({ ctl }: { ctl: PassportController }) {
           </button>
           {ctl.api && !ctl.isIssuer && (
             <p className="panel__desc" style={{ marginTop: 10 }}>
-              This wallet joined but is not the issuer, so it cannot mint credentials. Only the deployer holds the issuer key.
+              This wallet joined the shared contract, which it cannot issue on. Use "Deploy your own
+              contract" in step 01 to become the issuer, then issue here.
             </p>
           )}
         </>
