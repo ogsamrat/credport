@@ -9,7 +9,7 @@ import {
   type ProofReceipt,
 } from 'credport';
 import { initializeWalletSession, type WalletSession } from '../midnight/providers.js';
-import { extractIdentity, fileToDataUri, type KycResult } from '../kyc.js';
+import { extractIdentity, fileToImageDataUri, type KycResult } from '../kyc.js';
 import { short } from '../lib/format.js';
 
 export type LogKind = 'info' | 'ok' | 'err' | 'plain';
@@ -187,7 +187,7 @@ export function usePassport() {
       return;
     }
     setDocName(file.name);
-    setDocDataUri(await fileToDataUri(file));
+    setDocDataUri(await fileToImageDataUri(file));
   }, []);
 
   const verifyDocument = useCallback(
