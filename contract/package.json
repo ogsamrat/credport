@@ -1,6 +1,6 @@
 {
   "name": "credport-contract",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Compiled Compact contract bindings for credport, the reusable zero-knowledge identity credential on Midnight.",
   "license": "Apache-2.0",
   "author": "ogsamrat",
@@ -30,11 +30,11 @@
   "keywords": ["midnight", "compact", "zero-knowledge", "credential", "credport"],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ogsamrat/zkPassport.git",
+    "url": "git+https://github.com/ogsamrat/credport.git",
     "directory": "contract"
   },
-  "homepage": "https://github.com/ogsamrat/zkPassport#readme",
-  "bugs": "https://github.com/ogsamrat/zkPassport/issues",
+  "homepage": "https://github.com/ogsamrat/credport#readme",
+  "bugs": "https://github.com/ogsamrat/credport/issues",
   "scripts": {
     "compact": "compact compile src/passport.compact src/managed/passport",
     "build": "tsc --project tsconfig.build.json && node ../scripts/copy-managed.mjs",

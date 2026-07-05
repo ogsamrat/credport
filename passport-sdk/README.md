@@ -8,7 +8,7 @@ app receives only a single result, `verified`, for an opaque session id. The nam
 and the document are never disclosed to the app or written to the chain.
 
 [![npm](https://img.shields.io/npm/v/credport.svg)](https://www.npmjs.com/package/credport)
-[![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://github.com/ogsamrat/zkPassport/blob/main/LICENSE)
+[![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://github.com/ogsamrat/credport/blob/main/LICENSE)
 
 ```bash
 npm install credport
@@ -77,7 +77,7 @@ await holder.proveIdentity('Erika Mustermann', 18, { sessionId });
 ```
 
 Building the wallet providers is app specific. See the reference wiring in the
-[repository](https://github.com/ogsamrat/zkPassport) (`verifier-ui/src/midnight`).
+[repository](https://github.com/ogsamrat/credport) (`verifier-ui/src/midnight`).
 
 ## React
 
@@ -104,6 +104,6 @@ issuance.
 
 A full working demo runs on Midnight preprod. Connect a wallet, verify a document, issue a
 credential, and prove your name and age with a single verified result. See the
-[repository](https://github.com/ogsamrat/zkPassport) for the live URL and the end-to-end guide.
+[repository](https://github.com/ogsamrat/credport) for the live URL and the end-to-end guide.
 
 Apache-2.0.

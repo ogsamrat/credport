@@ -1,6 +1,6 @@
 {
   "name": "credport-react",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Drop-in React components to gate any dApp on a Midnight identity credential. Prove name and age with a single verified result, never the underlying data.",
   "license": "Apache-2.0",
   "author": "ogsamrat",
@@ -30,11 +30,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ogsamrat/zkPassport.git",
+    "url": "git+https://github.com/ogsamrat/credport.git",
     "directory": "packages/react"
   },
-  "homepage": "https://github.com/ogsamrat/zkPassport#readme",
-  "bugs": "https://github.com/ogsamrat/zkPassport/issues",
+  "homepage": "https://github.com/ogsamrat/credport#readme",
+  "bugs": "https://github.com/ogsamrat/credport/issues",
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit"
@@ -44,7 +44,7 @@
     "react-dom": ">=18"
   },
   "dependencies": {
-    "credport": "0.1.0"
+    "credport": "^0.1.1"
   },
   "devDependencies": {
     "@types/react": "19.2.14",

@@ -29,7 +29,7 @@ import { ProveAgeGate } from 'credport-react';
 
 `connect` is your wallet wiring. It returns the Midnight.js providers (indexer, proof server,
 wallet) for the connected Lace or 1AM wallet. See [`credport`](https://www.npmjs.com/package/credport)
-and the [repository](https://github.com/ogsamrat/zkPassport) for the provider recipe.
+and the [repository](https://github.com/ogsamrat/credport) for the provider recipe.
 
 ## Headless hook
 

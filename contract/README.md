@@ -7,7 +7,7 @@ This package is a dependency of `credport` and `credport-react`. Most users do n
 directly. It ships the generated TypeScript bindings (`pureCircuits`, `ledger`, `Contract`) and the
 witness definitions. It does not ship the zero-knowledge proving keys, which are large and only
 needed by proving apps; those are available in the
-[repository](https://github.com/ogsamrat/zkPassport) under `contract/src/managed`.
+[repository](https://github.com/ogsamrat/credport) under `contract/src/managed`.
 
 ```bash
 npm install credport

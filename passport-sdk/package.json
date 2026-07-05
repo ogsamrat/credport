@@ -1,6 +1,6 @@
 {
   "name": "credport",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Reusable zero-knowledge identity credentials on Midnight. Verify name and age once, then prove them to any app, which learns only a verified result and never the underlying data.",
   "license": "Apache-2.0",
   "author": "ogsamrat",
@@ -30,17 +30,17 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ogsamrat/zkPassport.git",
+    "url": "git+https://github.com/ogsamrat/credport.git",
     "directory": "passport-sdk"
   },
-  "homepage": "https://github.com/ogsamrat/zkPassport#readme",
-  "bugs": "https://github.com/ogsamrat/zkPassport/issues",
+  "homepage": "https://github.com/ogsamrat/credport#readme",
+  "bugs": "https://github.com/ogsamrat/credport/issues",
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node src/smoke.test.mjs"
   },
   "dependencies": {
-    "credport-contract": "0.1.0"
+    "credport-contract": "^0.1.1"
   }
 }
