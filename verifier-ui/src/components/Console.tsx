@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { PassportController } from '../hooks/usePassport.js';
 import { EXPLORER, short } from '../lib/format.js';
 import { Check, Lock, Upload, Wallet } from './Icons.js';
@@ -26,39 +25,29 @@ function Stepper({ ctl }: { ctl: PassportController }) {
 }
 
 function ContractPanel({ ctl }: { ctl: PassportController }) {
-  const [joinInput, setJoinInput] = useState('');
   const busy = ctl.busy;
+  const address = ctl.api?.contractAddress ?? ctl.contractAddress;
   return (
     <div className="panel">
       <div className="panel__top">
         <span className="panel__n">01</span>
-        <span className="panel__title">Passport contract</span>
+        <span className="panel__title">credport contract</span>
         {ctl.api && <span className="panel__done tag ok">joined</span>}
       </div>
+      <p className="panel__desc">
+        One deployment is a shared primitive. Every session verifies against this same contract on preprod.
+      </p>
+      <div className="result">
+        <div className="kv"><span className="k">address </span>{address}</div>
+      </div>
       {ctl.api ? (
-        <>
-          <p className="panel__desc">One deployment is a shared primitive. Every app verifies against it.</p>
-          <div className="result">
-            <div className="kv"><span className="k">address </span>{ctl.api.contractAddress}</div>
-          </div>
-          <a className="btn btn--secondary btn--sm" style={{ marginTop: 12 }} href={EXPLORER} target="_blank" rel="noreferrer">
-            View on the explorer
-          </a>
-        </>
+        <a className="btn btn--secondary btn--sm" style={{ marginTop: 12 }} href={EXPLORER} target="_blank" rel="noreferrer">
+          View on the explorer
+        </a>
       ) : (
-        <>
-          <p className="panel__desc">Deploy a fresh contract, or join the one running on preprod.</p>
-          <button className="btn btn--primary btn--block" onClick={ctl.deploy} disabled={busy !== null}>
-            {busy === 'deploy' ? <span className="spinner" /> : null}Deploy new
-          </button>
-          <label className="field">Or join an existing deployment</label>
-          <div className="row2">
-            <div><input type="text" placeholder="contract address" value={joinInput} onChange={(e) => setJoinInput(e.target.value)} /></div>
-            <button className="btn btn--secondary btn--sm" style={{ flex: '0 0 auto' }} onClick={() => ctl.join(joinInput)} disabled={busy !== null || !joinInput.trim()}>
-              {busy === 'join' ? <span className="spinner" /> : 'Join'}
-            </button>
-          </div>
-        </>
+        <button className="btn btn--primary btn--block" style={{ marginTop: 12 }} onClick={() => ctl.join()} disabled={busy !== null}>
+          {busy === 'join' ? <span className="spinner" /> : null}Join the preprod deployment
+        </button>
       )}
     </div>
   );
@@ -269,7 +258,7 @@ export function Console({ ctl }: { ctl: PassportController }) {
       <div className="wrap">
         <div className="section__head" data-reveal>
           <p className="kicker">Try it, on preprod</p>
-          <h2>Issue a credential, then prove you are over 18.</h2>
+          <h2>Issue a credential, then prove your name and age.</h2>
           <p>
             The real end to end flow, on chain. Connect a Midnight wallet, verify an ID, and watch a
             result turn green while your birthdate stays on this device.

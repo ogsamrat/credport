@@ -19,9 +19,11 @@ export interface LogLine {
   at: string;
 }
 
-// v2: the contract now binds the name and adds proveIdentity, so old cached
-// addresses/credentials from the age-only contract must not be reused.
-const ADDRESS_KEY = 'zkpassport:contract-address:v2';
+// The single canonical credport deployment on preprod. The demo verifies against
+// this one contract only; it never deploys a per-session contract.
+const DEPLOYED_CONTRACT = '1904b5a37fdcc8eeb62a479e9924de30b51d0e227bc43b045b21806254f994ba';
+// v2: the contract binds the name and adds proveIdentity, so credentials cached
+// from the older age-only contract must not be reused.
 const CREDFILE_KEY = 'zkpassport:credential-file:v2';
 
 const NO_DUST_HINT =
@@ -47,9 +49,7 @@ export interface GateState {
 export function usePassport() {
   const [session, setSession] = useState<WalletSession | null>(null);
   const [api, setApi] = useState<PassportAPI | null>(null);
-  const [contractAddress, setContractAddress] = useState<string>(
-    () => localStorage.getItem(ADDRESS_KEY) ?? '',
-  );
+  const [contractAddress, setContractAddress] = useState<string>(DEPLOYED_CONTRACT);
   const [credential, setCredential] = useState<CredentialFile | null>(() => {
     try {
       const raw = localStorage.getItem(CREDFILE_KEY);
@@ -91,24 +91,21 @@ export function usePassport() {
     [api, session],
   );
 
-  // Adopt a CLI-deployed contract address (public/deployment.json) on first load.
+  // Keep the pinned address in sync with the published deployment
+  // (public/deployment.json), but never switch contracts once a session has joined.
   useEffect(() => {
-    if (contractAddress) return;
+    if (api) return;
     let cancelled = false;
     void fetch('/deployment.json')
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { contractAddress?: string } | null) => {
-        if (!cancelled && d?.contractAddress) {
-          setContractAddress(d.contractAddress);
-          localStorage.setItem(ADDRESS_KEY, d.contractAddress);
-        }
+        if (!cancelled && d?.contractAddress) setContractAddress(d.contractAddress);
       })
       .catch(() => undefined);
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [api]);
 
   // Reconcile local state against the active contract.
   useEffect(() => {
@@ -168,33 +165,18 @@ export function usePassport() {
     [run, append, contractAddress],
   );
 
-  const deploy = useCallback(
-    () =>
-      run('deploy', async () => {
-        if (!session) return;
-        append('info', 'Deploying passport contract to preprod (sign in your wallet)…');
-        const deployed = await withFeeTimeout(PassportAPI.deploy(session.providers), 150_000, 'Deploy');
-        setApi(deployed);
-        setContractAddress(deployed.contractAddress);
-        localStorage.setItem(ADDRESS_KEY, deployed.contractAddress);
-        append('ok', `Deployed at ${deployed.contractAddress}`);
-      }),
-    [run, append, session],
-  );
-
+  // The demo joins the single canonical deployment. There is no per-session
+  // deploy: verification always happens against the same on-chain contract.
   const join = useCallback(
-    (address: string) =>
+    () =>
       run('join', async () => {
-        if (!session || !address.trim()) return;
-        const a = address.trim();
-        append('info', `Joining passport contract ${short(a)}…`);
-        const joined = await PassportAPI.join(session.providers, a);
+        if (!session) return;
+        append('info', `Joining the preprod deployment ${short(contractAddress)}…`);
+        const joined = await PassportAPI.join(session.providers, contractAddress);
         setApi(joined);
-        setContractAddress(a);
-        localStorage.setItem(ADDRESS_KEY, a);
-        append('ok', 'Joined passport contract');
+        append('ok', 'Joined the credport deployment');
       }),
-    [run, append, session],
+    [run, append, session, contractAddress],
   );
 
   const pickDoc = useCallback(async (file: File | undefined) => {
@@ -288,7 +270,6 @@ export function usePassport() {
     connect,
     api,
     contractAddress,
-    deploy,
     join,
     isIssuer,
     // kyc
